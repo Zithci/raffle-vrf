@@ -19,7 +19,6 @@
 // 7. private
 // 8. view/pure
 
-
 // ________________
 //Version.
 //SPDX-License-Identifier:MIT
@@ -35,17 +34,20 @@ error NotEnoughEthEntered();
 error RaffleNotOpen();
 
 //** */
-/**@title a raffle.
-/*@author geva
-/*@notice  just wanna play with VRF.
-/*@dev simple raffle with VRF
+/**
+ * @title a raffle.
+ *@author geva
+ *@notice  just wanna play with VRF.
+ *@dev simple raffle with VRF
  */
 
 //define the contract
 contract Raffle is VRFConsumerBaseV2Plus {
-
     // 5. type declarations
-    enum RaffleState { OPEN, CALCULATING }
+    enum RaffleState {
+        OPEN,
+        CALCULATING
+    }
 
     //define state var
     uint256 private immutable i_entranceFee;
@@ -67,7 +69,8 @@ contract Raffle is VRFConsumerBaseV2Plus {
     event winnerPicked(address winner, uint256 timetamp);
 
     constructor(uint256 entranceFee, uint256 interval, bytes32 keyHash, uint256 subscriptionId, address vrfCoordinator)
-    VRFConsumerBaseV2Plus(vrfCoordinator) {
+        VRFConsumerBaseV2Plus(vrfCoordinator)
+    {
         //assign params to state var
         i_entranceFee = entranceFee;
         i_interval = interval;
@@ -84,10 +87,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
         emit playerEntered(msg.sender, block.timestamp);
     }
 
-    function getPlayers(uint256 index) public view returns(address){
+    function getPlayers(uint256 index) public view returns (address) {
         return s_players[index];
     }
-
 
     //rqst random words
     function ChooseWinner() external {
@@ -117,12 +119,12 @@ contract Raffle is VRFConsumerBaseV2Plus {
         //transfer(interaction) the balance to the winner
         uint256 winnerIndex = randomWords[0] % s_players.length;
         address payable winner = s_players[winnerIndex];
-        
+
         //reset(effect)the array timestamp an the state
         s_players = new address payable[](0);
         s_lastTimeStamp = block.timestamp;
         s_raffleState = RaffleState.OPEN;
-        emit winnerPicked(winner,block.timestamp);
+        emit winnerPicked(winner, block.timestamp);
 
         //transfer(interaction) the balance to the winner
         (bool success,) = winner.call{value: address(this).balance}("");
