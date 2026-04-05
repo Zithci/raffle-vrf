@@ -28,7 +28,7 @@ pragma solidity ^0.8.24;
 
 import {VRFConsumerBaseV2Plus} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 import {VRFV2PlusClient} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
-
+import {AutomationCompatibleInterface} from "chainlink-brownie-contracts/contracts/src/v0.8/automation/AutomationCompatible.sol";
 // declare errors
 error NotEnoughEthEntered();
 error RaffleNotOpen();
@@ -42,7 +42,7 @@ error RaffleNotOpen();
  */
 
 //define the contract
-contract Raffle is VRFConsumerBaseV2Plus {
+contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface{
     // 5. type declarations
     enum RaffleState {
         OPEN,
@@ -91,24 +91,24 @@ contract Raffle is VRFConsumerBaseV2Plus {
         return s_players[index];
     }
 
-    //rqst random words
-    function ChooseWinner() external {
-        if (s_players.length < TOTAL_TICKETS && block.timestamp - s_lastTimeStamp < i_interval) {
-            revert RaffleNotOpen();
-        }
-        s_raffleState = RaffleState.CALCULATING;
-        //requesting random words after all the terms are met
-        s_vrfCoordinator.requestRandomWords(
-            VRFV2PlusClient.RandomWordsRequest({
-                keyHash: i_keyHash,
-                subId: subscription_Id,
-                requestConfirmations: 3,
-                callbackGasLimit: CALL_BACK_GAS_LIMIT,
-                numWords: NUM_WORDS,
-                extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
-            })
-        );
-    }
+    // //rqst random words
+    // function ChooseWinner() external {
+    //     if (s_players.length < TOTAL_TICKETS && block.timestamp - s_lastTimeStamp < i_interval) {
+    //         revert RaffleNotOpen();
+    //     }
+    //     s_raffleState = RaffleState.CALCULATING;
+    //     //requesting random words after all the terms are met
+    //     s_vrfCoordinator.requestRandomWords(
+    //         VRFV2PlusClient.RandomWordsRequest({
+    //             keyHash: i_keyHash,
+    //             subId: subscription_Id,
+    //             requestConfirmations: 3,
+    //             callbackGasLimit: CALL_BACK_GAS_LIMIT,
+    //             numWords: NUM_WORDS,
+    //             extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
+    //         })
+    //     );
+    // }
 
     // modulo fulfill
     // adding CEI
@@ -130,4 +130,35 @@ contract Raffle is VRFConsumerBaseV2Plus {
         (bool success,) = winner.call{value: address(this).balance}("");
         if (!success) revert();
     }
+
+    function checkUpkeep(bytes memory /* checkData*/ )
+    public
+    view 
+    override
+    returns(bool upkeepNeeded,bytes memory /* performData */)
+    {
+        upkeepNeeded = (
+            block.timestamp - s_lastTimeStamp >= i_interval && 
+            s_raffleState == RaffleState.OPEN &&
+             s_players.length > 0 && address(this).balance > 0
+        );
+    }
+
+
+    function performUpkeep(bytes calldata /*performData */) external override{
+        (bool upKeepNeeded, ) = checkUpkeep(new bytes (0));
+        if(!upKeepNeeded) revert RaffleNotOpen();
+        s_raffleState = RaffleState.CALCULATING;
+        //requesting random words after all the terms are met
+        s_vrfCoordinator.requestRandomWords(
+            VRFV2PlusClient.RandomWordsRequest({
+                keyHash: i_keyHash,
+                subId: subscription_Id,
+                requestConfirmations: 3,
+                callbackGasLimit: CALL_BACK_GAS_LIMIT,
+                numWords: NUM_WORDS,
+                extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
+            })
+        );
+}
 }
