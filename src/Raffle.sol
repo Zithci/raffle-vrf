@@ -28,7 +28,9 @@ pragma solidity ^0.8.24;
 
 import {VRFConsumerBaseV2Plus} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 import {VRFV2PlusClient} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
-import {AutomationCompatibleInterface} from "chainlink-brownie-contracts/contracts/src/v0.8/automation/AutomationCompatible.sol";
+import {
+    AutomationCompatibleInterface
+} from "chainlink-brownie-contracts/contracts/src/v0.8/automation/AutomationCompatible.sol";
 // declare errors
 error NotEnoughEthEntered();
 error RaffleNotOpen();
@@ -42,7 +44,7 @@ error RaffleNotOpen();
  */
 
 //define the contract
-contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface{
+contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     // 5. type declarations
     enum RaffleState {
         OPEN,
@@ -131,23 +133,30 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface{
         if (!success) revert();
     }
 
-    function checkUpkeep(bytes memory /* checkData*/ )
-    public
-    view 
-    override
-    returns(bool upkeepNeeded,bytes memory /* performData */)
+    function checkUpkeep(
+        bytes memory /* checkData*/
+    )
+        public
+        view
+        override
+        returns (
+            bool upkeepNeeded,
+            bytes memory /* performData */
+        )
     {
-        upkeepNeeded = (
-            block.timestamp - s_lastTimeStamp >= i_interval && 
-            s_raffleState == RaffleState.OPEN &&
-             s_players.length > 0 && address(this).balance > 0
-        );
+        upkeepNeeded =
+        (block.timestamp - s_lastTimeStamp >= i_interval && s_raffleState == RaffleState.OPEN && s_players.length > 0
+                && address(this).balance > 0);
     }
 
-
-    function performUpkeep(bytes calldata /*performData */) external override{
-        (bool upKeepNeeded, ) = checkUpkeep(new bytes (0));
-        if(!upKeepNeeded) revert RaffleNotOpen();
+    function performUpkeep(
+        bytes calldata /*performData */
+    )
+        external
+        override
+    {
+        (bool upKeepNeeded,) = checkUpkeep(new bytes(0));
+        if (!upKeepNeeded) revert RaffleNotOpen();
         s_raffleState = RaffleState.CALCULATING;
         //requesting random words after all the terms are met
         s_vrfCoordinator.requestRandomWords(
@@ -160,5 +169,5 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface{
                 extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
             })
         );
-}
+    }
 }

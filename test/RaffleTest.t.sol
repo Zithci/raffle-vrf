@@ -58,12 +58,10 @@ contract RaffleTest is Test {
             vm.prank(player);
             raffle.enterRaffle{value: entranceFee}();
         }
-        raffle.performUpkeep(new bytes (0));
+        raffle.performUpkeep(new bytes(0));
         vm.expectRevert(RaffleNotOpen.selector);
         vm.prank(geva);
         raffle.enterRaffle{value: entranceFee}();
     }
 }
-
-
 
