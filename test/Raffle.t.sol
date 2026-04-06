@@ -3,7 +3,9 @@ pragma solidity ^0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
 import {Raffle} from "../src/Raffle.sol";
-import {VRFCoordinatorV2_5Mock} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+import {
+    VRFCoordinatorV2_5Mock
+} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
 // re-declare file-level errors so we can use .selector in expectRevert
 error NotEnoughEthEntered();
@@ -44,8 +46,8 @@ contract RaffleTest is Test {
 
         assertEq(raffle.getPlayers(0), player);
     }
-    
-        function test_enterRaffle_revertsWithNotEnoughETH() public {
+
+    function test_enterRaffle_revertsWithNotEnoughETH() public {
         address player = makeAddr("player");
         vm.deal(player, 1 ether);
 
@@ -58,7 +60,6 @@ contract RaffleTest is Test {
     // Reverts enterRaffle when calculating
     // ─────────────────────────────────────────────────────────────
 
-    
     function test_enterRaffle_revertsWhenCalculating() public {
         address player1 = makeAddr("player1");
         address player2 = makeAddr("player2");
@@ -79,7 +80,7 @@ contract RaffleTest is Test {
     // ─────────────────────────────────────────────────────────────
     // performUpkeep(new bytes(0))   // ─────────────────────────────────────────────────────────────
 
-  function test_chooseWinner_revertsBeforeIntervalPasses() public {
+    function test_chooseWinner_revertsBeforeIntervalPasses() public {
         address player = makeAddr("player");
         vm.deal(player, 1 ether);
 
@@ -146,13 +147,12 @@ contract RaffleTest is Test {
         uint256 balanceBefore = players[1].balance;
         vrfCoordinator.fulfillRandomWordsWithOverride(1, address(raffle), randomWords);
 
-       assertEq(players[1].balance, balanceBefore + ENTRANCE_FEE * 3);
+        assertEq(players[1].balance, balanceBefore + ENTRANCE_FEE * 3);
     }
 
     // ─────────────────────────────────────────────────────────────
     //  reset the winner list - clear the list
     // ─────────────────────────────────────────────────────────────
-
 
     function test_stateResetsAfterWinner() public {
         address player1 = makeAddr("player1");
