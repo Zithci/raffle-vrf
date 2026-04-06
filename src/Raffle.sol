@@ -93,6 +93,10 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         return s_players[index];
     }
 
+    function getPlayersLength() public view returns (uint256) {
+        return s_players.length;
+    }
+
     // //rqst random words
     // function ChooseWinner() external {
     //     if (s_players.length < TOTAL_TICKETS && block.timestamp - s_lastTimeStamp < i_interval) {

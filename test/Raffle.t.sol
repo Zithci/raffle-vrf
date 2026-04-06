@@ -3,9 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
 import {Raffle} from "../src/Raffle.sol";
-import {
-    VRFCoordinatorV2_5Mock
-} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+import {VRFCoordinatorV2_5Mock} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
 // re-declare file-level errors so we can use .selector in expectRevert
 error NotEnoughEthEntered();
@@ -60,10 +58,24 @@ contract RaffleTest is Test {
     // Reverts enterRaffle when calculating
     // ─────────────────────────────────────────────────────────────
 
+    // ─────────────────────────────────────────────────────────────
+    // Fuzz
+    // ─────────────────────────────────────────────────────────────
+
+    function testFuzz_enterRaffle_revertsIfInsuficientFee(uint96 amount) public {
+    vm.assume(amount < ENTRANCE_FEE); // filter amount from foundry 0.001
+        address player = makeAddr("fuzzer"); //generate deterministic address from the string
+        vm.deal(player, ENTRANCE_FEE); //give player enough eth to send tx
+
+        vm.prank(player); 
+        vm.expectRevert(NotEnoughEthEntered.selector); // err detail
+        raffle.enterRaffle{value:amount}();
+    }
+
     function test_enterRaffle_revertsWhenCalculating() public {
         address player1 = makeAddr("player1");
         address player2 = makeAddr("player2");
-        vm.deal(player1, 1 ether);
+        vm.deal(player1, 1 ether);  
         vm.deal(player2, 1 ether);
 
         vm.prank(player1);
